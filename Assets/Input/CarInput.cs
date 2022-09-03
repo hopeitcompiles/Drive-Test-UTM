@@ -338,9 +338,18 @@ public partial class @CarInput : IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
+                    ""name"": ""Position"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""48f7a0e9-ef68-4e48-97c6-2d86798021f5"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""Click"",
                     ""type"": ""Button"",
-                    ""id"": ""48f7a0e9-ef68-4e48-97c6-2d86798021f5"",
+                    ""id"": ""535fd7e8-0997-491b-9b15-8e46a8859c14"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -384,6 +393,28 @@ public partial class @CarInput : IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""50962100-ca54-4f74-b208-2268195014de"",
+                    ""path"": ""<Touchscreen>/primaryTouch/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Position"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""db6be62b-8801-4133-a629-b31d202d86a5"",
+                    ""path"": ""<Mouse>/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Position"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""af9f93a3-d03d-4508-9ffa-12395f403c75"",
                     ""path"": ""<Mouse>/leftButton"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -394,8 +425,8 @@ public partial class @CarInput : IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""db6be62b-8801-4133-a629-b31d202d86a5"",
-                    ""path"": ""<Touchscreen>/Press"",
+                    ""id"": ""fc0b27c2-f665-4754-977a-52f82e50dbb7"",
+                    ""path"": ""<Touchscreen>/primaryTouch/press"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -415,6 +446,7 @@ public partial class @CarInput : IInputActionCollection2, IDisposable
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Pause = m_UI.FindAction("Pause", throwIfNotFound: true);
+        m_UI_Position = m_UI.FindAction("Position", throwIfNotFound: true);
         m_UI_Click = m_UI.FindAction("Click", throwIfNotFound: true);
     }
 
@@ -517,12 +549,14 @@ public partial class @CarInput : IInputActionCollection2, IDisposable
     private readonly InputActionMap m_UI;
     private IUIActions m_UIActionsCallbackInterface;
     private readonly InputAction m_UI_Pause;
+    private readonly InputAction m_UI_Position;
     private readonly InputAction m_UI_Click;
     public struct UIActions
     {
         private @CarInput m_Wrapper;
         public UIActions(@CarInput wrapper) { m_Wrapper = wrapper; }
         public InputAction @Pause => m_Wrapper.m_UI_Pause;
+        public InputAction @Position => m_Wrapper.m_UI_Position;
         public InputAction @Click => m_Wrapper.m_UI_Click;
         public InputActionMap Get() { return m_Wrapper.m_UI; }
         public void Enable() { Get().Enable(); }
@@ -536,6 +570,9 @@ public partial class @CarInput : IInputActionCollection2, IDisposable
                 @Pause.started -= m_Wrapper.m_UIActionsCallbackInterface.OnPause;
                 @Pause.performed -= m_Wrapper.m_UIActionsCallbackInterface.OnPause;
                 @Pause.canceled -= m_Wrapper.m_UIActionsCallbackInterface.OnPause;
+                @Position.started -= m_Wrapper.m_UIActionsCallbackInterface.OnPosition;
+                @Position.performed -= m_Wrapper.m_UIActionsCallbackInterface.OnPosition;
+                @Position.canceled -= m_Wrapper.m_UIActionsCallbackInterface.OnPosition;
                 @Click.started -= m_Wrapper.m_UIActionsCallbackInterface.OnClick;
                 @Click.performed -= m_Wrapper.m_UIActionsCallbackInterface.OnClick;
                 @Click.canceled -= m_Wrapper.m_UIActionsCallbackInterface.OnClick;
@@ -546,6 +583,9 @@ public partial class @CarInput : IInputActionCollection2, IDisposable
                 @Pause.started += instance.OnPause;
                 @Pause.performed += instance.OnPause;
                 @Pause.canceled += instance.OnPause;
+                @Position.started += instance.OnPosition;
+                @Position.performed += instance.OnPosition;
+                @Position.canceled += instance.OnPosition;
                 @Click.started += instance.OnClick;
                 @Click.performed += instance.OnClick;
                 @Click.canceled += instance.OnClick;
@@ -561,6 +601,7 @@ public partial class @CarInput : IInputActionCollection2, IDisposable
     public interface IUIActions
     {
         void OnPause(InputAction.CallbackContext context);
+        void OnPosition(InputAction.CallbackContext context);
         void OnClick(InputAction.CallbackContext context);
     }
 }

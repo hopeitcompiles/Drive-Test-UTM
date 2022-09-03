@@ -1,24 +1,25 @@
 using System.Collections;
-using System.Collections.Generic;
+using UnityEngine.InputSystem; 
 using UnityEngine;
 
 public class PointManager : MonoBehaviour
 {
-    private const int POINTS_GOAL = 25;
+    private const int POINTS_GOAL = 30;
+    private const float TEST_TIME = 25;
 
     public TMPro.TextMeshProUGUI ui_timer;
     public TMPro.TextMeshProUGUI ui_points;
     public TMPro.TextMeshProUGUI ui_objective;
     public TMPro.TextMeshProUGUI ui_start_timer;
+    public TMPro.TextMeshProUGUI ui_start_points;
+
     public GameObject pause_panel;
     public Panel start_panel;
     private bool is_game_paused;
+    public bool is_game_stopped;
     CarInput input;
-    private float test_time = 45;
     private float timer_start = 0, timer_test = 0;
     private float points;
-    public GameObject bad_point;
-    public GameObject good_point;
     public static PointManager instance;
     public static PointManager Instance()
     {
@@ -30,22 +31,19 @@ public class PointManager : MonoBehaviour
     }
     void Start()
     {
+        PointPanel.instance.gameObject.SetActive(false);
+        is_game_stopped = true;
         ui_objective.text = "Objetivo: " + POINTS_GOAL.ToString() + " puntos";
         points = 0; 
         ui_points.text = "Puntos: " + points.ToString();
         input = InputManager.Instance();
         start_panel.gameObject.SetActive(true);
         input.UI.Pause.performed += Pause_performed;
-        input.UI.Click.performed += Click_performed;
     }
-
-    private void Click_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj)
-    {
-        throw new System.NotImplementedException();
-    }
-
     public void add_point(bool should_add)
     {
+        if (is_game_stopped || is_game_paused)
+            return;
         points += should_add ? 1 : -1;
         if (points < 0)
             points = 0;
@@ -63,6 +61,10 @@ public class PointManager : MonoBehaviour
 
     public void start_game()
     {
+        ui_timer.text = "Tiempo";
+        ui_points.text = "Puntos";
+        PointPanel.instance.gameObject.SetActive(true);
+        points = 0;
         start_panel.gameObject.SetActive(false);
         start_panel.set_text_secondary("");
         ui_start_timer.transform.parent.gameObject.SetActive(true);
@@ -72,9 +74,10 @@ public class PointManager : MonoBehaviour
     void Load_information()
     {
         ui_timer.text = timer_test > 0 ? "Has chocado!" : "Terminado!";
-        start_panel.set_text(timer_test > 0 ? "Buen intento!" : "Buen trabajo!");
-        start_panel.set_text_secondary(timer_test > 0 ? "Tiempo restante " + (timer_test + 1).ToString() + " segundos"
+        start_panel.set_text(points < POINTS_GOAL ? "Buen intento!" : "Buen trabajo!");
+        start_panel.set_text_secondary(points < POINTS_GOAL ? "Vuelve a intentarlo "
             : "Has aprobado el test!");
+        ui_start_points.text = "Has obtenido " + points.ToString()+" puntos"+ (points < POINTS_GOAL?" de "+POINTS_GOAL.ToString():"");
     }
     public void Countdown_Start()
     {
@@ -82,7 +85,8 @@ public class PointManager : MonoBehaviour
         timer_start -= 1;
         if (timer_start < 0)
         {
-            timer_test = test_time;
+            timer_test = TEST_TIME;
+            is_game_stopped = false;
             ui_start_timer.transform.parent.gameObject.SetActive(false);
             CancelInvoke("Countdown_Start");
             InvokeRepeating("Test_Run", 0f, 1f);
@@ -90,7 +94,17 @@ public class PointManager : MonoBehaviour
     }
     public void stop_game()
     {
-
+        is_game_stopped = true;
+        Audioprovider.instance.EndGameSound();
+        CancelInvoke("Test_Run");
+        StartCoroutine(ActivateAfterTime(1.5f));
+        Load_information();
+    }
+    IEnumerator ActivateAfterTime(float time)
+    {
+        yield return new WaitForSeconds(time);
+        PointPanel.instance.gameObject.SetActive(false);
+        start_panel.SetActive(true);
     }
     public void Test_Run()
     {
